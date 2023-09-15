@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Notícias do Tópico Mais Pesquisado</title>
+    <style>
+       /* Estilos CSS para a notícia */
+.noticia-imagem {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+}
+
+.noticia-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: left;
+    margin-bottom: 20px;
+    background-color: #fff;
+}
+
+.noticia-container h2 {
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.noticia-container p {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.noticia-container a {
+    display: inline-block;
+    font-size: 18px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.noticia-container a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para dispositivos móveis */
+@media screen and (max-width: 768px) {
+    .noticia-container {
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+    .noticia-container h2 {
+        font-size: 20px;
+    }
+
+    .noticia-container p {
+        font-size: 16px;
+    }
+
+    .noticia-container a {
+        font-size: 16px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <center><h2>Notícias do Tópico Mais Pesquisado no Google Trends</h2></center>
+    <div id="noticia-container"></div>
+
+    <script>
+        const container = document.getElementById('noticia-container');
+
+        // URL do feed RSS do Google Trends
+        const feedUrl = 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=PT';
+
+        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`)
+            .then(response => response.json())
+            .then(data => {
+                const items = data.items;
+
+                if (items.length > 0) {
+                    // Obter o tópico mais pesquisado (primeiro item no feed)
+                    const primeiroItem = items[0];
+                    const topico = primeiroItem.title;
+
+                    // Usar o tópico mais pesquisado para buscar notícias usando a API do Gnews
+                    const API_KEY = 'a6ec55d716fd3d21c7280c89985206da';
+                    const endpoint = 'search';
+
+                    const params = `q=${encodeURIComponent(topico)}&country=pt&lang=pt&token=${API_KEY}&max=10`; // Adicionado max=10 para obter 10 notícias
+
+                    fetch(`https://gnews.io/api/v4/${endpoint}?${params}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const articles = data.articles;
+
+                            if (articles.length > 0) {
+                                // Exibir as notícias encontradas
+                                articles.forEach(article => {
+                                    const title = article.title;
+                                    const description = article.description;
+                                    const url = article.url;
+                                    const imageUrl = article.image;
+                                    const publishedAt = article.publishedAt;
+
+                                    // Cria um elemento HTML para exibir a notícia
+                                    const div = document.createElement('div');
+                                    div.classList.add('noticia-container');
+                                    div.innerHTML = `
+                                        <h2>${title}</h2>
+                                        <p>${description}</p>
+                                        <p>Data de Publicação: ${publishedAt}</p>
+                                        <a href="${url}" target="_blank">Leia mais</a>
+                                        <img src="${imageUrl}" alt="${title}" class="noticia-imagem">
+                                    `;
+
+                                    // Adiciona a notícia ao contêiner
+                                    container.appendChild(div);
+                                });
+                            } else {
+                                // Caso nenhuma notícia seja encontrada
+                                container.innerHTML = '<p>Nenhuma notícia encontrada.</p>';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar notícias:', error);
+                        });
+                } else {
+                    // Caso o feed não contenha itens
+                    container.innerHTML = '<p>Nenhuma notícia encontrada.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar o feed RSS:', error);
+            });
+    </script>
+</body>
+</html>
+
